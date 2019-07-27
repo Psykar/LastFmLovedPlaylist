@@ -5,7 +5,7 @@ Option Explicit
 '
 ' SCRIPTNAME: Last.fm Loved Tracks Playlist Creator
 ' DEVELOPMENT STARTED: 2009.12.07
-  Dim Version : Version = "1.1"
+  Dim Version : Version = "1.2"
 
 ' DESCRIPTION: Create a playlist containing loved tracks of a specific last.fm user
 ' FORUM THREAD: http://mediamonkey.com/forum/viewtopic.php?f=2&t=44987
@@ -23,6 +23,10 @@ Option Explicit
 ' Language=VBScript
 ' ScriptType=0 
 '
+' Changes 1.2:
+' - Neater logging
+' - Message box on completion
+'
 ' Changes 1.1:
 ' - Fixed install function
 ' - Added more logging options
@@ -30,7 +34,7 @@ Option Explicit
 ' Initial Release 1.0
 '
 
-Const ForReading = 1, ForWriting = 2, ForAppending = 8, Logging = False, Timeout = 100
+Const ForReading = 1, ForWriting = 2, ForAppending = 8, Logging = True, Timeout = 100
 
 
 
@@ -163,14 +167,14 @@ Sub LastFmLovedPlaylist
 
 				If Plays >= 0 Then
 					Playlist.AddTrack(Add_me)
-					logme "Was added"
+					logme "--Was added"
 				Else
-					logme "Was not found in database"
+					logme "--Was not found in database"
 				End If
 
 				If Num_Dupes > 1 Then
 					Duplicate_Tracks = Duplicate_Tracks & VbCrLf & TrackTitle & " - " & ArtistName
-					logme "Had duplicates"
+					logme "--Had duplicates"
 				End If
 					
 				
@@ -193,8 +197,9 @@ Sub LastFmLovedPlaylist
 	If Not Duplicate_Tracks = "" Then
 		Duplicate_Tracks = VbCrLf & VbCrLf & "You also have duplicates of these tracks in your database" &_
 						VbCrLf & "The one with the highest playcount was added to the playlist:" & VbCrLf & Duplicate_Tracks
-		SDB.MessageBox Not_Added & Duplicate_Tracks,mtInformation,Array(mbOK)
 	End If
+	
+	SDB.MessageBox Not_Added & Duplicate_Tracks,mtInformation,Array(mbOK)
 
 End Sub
 
