@@ -5,7 +5,7 @@ Option Explicit
 '
 ' SCRIPTNAME: Last.fm Loved Tracks Playlist Creator
 ' DEVELOPMENT STARTED: 2009.12.07
-  Dim Version : Version = "1.2"
+  Dim Version : Version = "1.3"
 
 ' DESCRIPTION: Create a playlist containing loved tracks of a specific last.fm user
 ' FORUM THREAD: http://mediamonkey.com/forum/viewtopic.php?f=2&t=44987
@@ -23,6 +23,9 @@ Option Explicit
 ' Language=VBScript
 ' ScriptType=0 
 '
+' Changes 1.3:
+' - Added commit after database query so playlist adding no longer fails occasionally
+'
 ' Changes 1.2:
 ' - Neater logging
 ' - Message box on completion
@@ -34,7 +37,7 @@ Option Explicit
 ' Initial Release 1.0
 '
 
-Const ForReading = 1, ForWriting = 2, ForAppending = 8, Logging = True, Timeout = 100
+Const ForReading = 1, ForWriting = 2, ForAppending = 8, Logging = False, Timeout = 100
 
 
 
@@ -124,7 +127,7 @@ Sub LastFmLovedPlaylist
 		  Exit Sub
 		End If
 
-		logme " Page: " & Page
+		logme " Page: " & Page & " of " & StatusBar.MaxValue
 		Set XML = LoadXML(uname, Page)
 		SDB.ProcessMessages
 
@@ -136,15 +139,17 @@ Sub LastFmLovedPlaylist
 			End If
 			'logme "XML appears to be OK, proceeding"
 
-
 		
 			For Each Ele in XML.GetElementsByTagName("lfm").item(0).GetElementsByTagName("lovedtracks").item(0).GetElementsByTagName("track")
-
+				
+				
 				TrackTitle = Ele.GetElementsByTagName("name").item(0).Text
 				ArtistName = Ele.GetElementsByTagName("artist").item(0).GetElementsByTagName("name").item(0).Text
 				
+				logme TrackTitle & " - " & ArtistName
 
 				Set list = SDB.Database.QuerySongs("Artist = '" & CorrectSt(ArtistName) & "' AND SongTitle = '" & CorrectSt(TrackTitle) & "'")
+				SDB.Database.Commit
 
 				If list.EOF Then
 					Not_Added = Not_Added & VbCrLf & TrackTitle & " - " & ArtistName
@@ -159,19 +164,24 @@ Sub LastFmLovedPlaylist
 					If list.item.Playcounter > Plays Then
 						Set Add_me = list.item
 						Plays = list.item.Playcounter
+						SDB.ProcessMessages
 					End If
-					list.next
+					list.Next
+					
+					SDB.ProcessMessages
 				Loop
 
-				logme TrackTitle & " - " & ArtistName
+				
+				SDB.ProcessMessages
 
 				If Plays >= 0 Then
+					
 					Playlist.AddTrack(Add_me)
 					logme "--Was added"
 				Else
 					logme "--Was not found in database"
 				End If
-
+				
 				If Num_Dupes > 1 Then
 					Duplicate_Tracks = Duplicate_Tracks & VbCrLf & TrackTitle & " - " & ArtistName
 					logme "--Had duplicates"
@@ -180,7 +190,7 @@ Sub LastFmLovedPlaylist
 				
 
 				SDB.ProcessMessages
-			 
+
 			Next
 		Else
 			Exit Sub
