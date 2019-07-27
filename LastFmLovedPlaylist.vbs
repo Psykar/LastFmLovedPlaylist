@@ -4,17 +4,17 @@ Option Explicit
 ' MediaMonkey Script
 '
 ' SCRIPTNAME: Last.fm Loved Tracks Playlist Creator
-' DEVELOPMENT STARTED: 2009.02.17
-  Dim Version : Version = "1.0"
+' DEVELOPMENT STARTED: 2009.12.07
+  Dim Version : Version = "1.1"
 
 ' DESCRIPTION: Create a playlist containing loved tracks of a specific last.fm user
-' FORUM THREAD: http://www.mediamonkey.com/forum/viewtopic.php?f=2&t=15663&start=15#p191962
+' FORUM THREAD: http://mediamonkey.com/forum/viewtopic.php?f=2&t=44987
 ' 
 ' INSTALL: Copy to Scripts directory and add the following to Scripts.ini 
 '          Don't forget to remove comments (') and set the order appropriately
 '
 '
-' [LastFmImport]
+' [LastFmLovedPlaylist]
 ' FileName=LastFmLovedPlaylist.vbs
 ' ProcName=LastFmLovedPlaylist
 ' Order=7
@@ -22,6 +22,12 @@ Option Explicit
 ' Description=Create a playlist containing loved tracks of a specific last.fm user
 ' Language=VBScript
 ' ScriptType=0 
+'
+' Changes 1.1:
+' - Fixed install function
+' - Added more logging options
+'
+' Initial Release 1.0
 '
 
 Const ForReading = 1, ForWriting = 2, ForAppending = 8, Logging = False, Timeout = 100
@@ -144,7 +150,7 @@ Sub LastFmLovedPlaylist
 				Num_Dupes = 0
 
 				Do While Not list.EOF
-					logme list.item.Title
+
 					Num_Dupes = Num_Dupes + 1
 					If list.item.Playcounter > Plays Then
 						Set Add_me = list.item
@@ -152,12 +158,19 @@ Sub LastFmLovedPlaylist
 					End If
 					list.next
 				Loop
+
+				logme TrackTitle & " - " & ArtistName
+
 				If Plays >= 0 Then
 					Playlist.AddTrack(Add_me)
+					logme "Was added"
+				Else
+					logme "Was not found in database"
 				End If
 
 				If Num_Dupes > 1 Then
 					Duplicate_Tracks = Duplicate_Tracks & VbCrLf & TrackTitle & " - " & ArtistName
+					logme "Had duplicates"
 				End If
 					
 				
@@ -384,13 +397,13 @@ Sub Install()
 	Dim inip : inip = SDB.ApplicationPath&"Scripts\Scripts.ini"
 	Dim inif : Set inif = SDB.Tools.IniFileByPath(inip)
 	If Not (inif Is Nothing) Then
-		inif.StringValue("LastFmImport","Filename") = "LastFmLovedPlaylist.vbs"
-		inif.StringValue("LastFmImport","Procname") = "LastFmLovedPlaylist"
-		inif.StringValue("LastFmImport","Order") = "7"
-		inif.StringValue("LastFmImport","DisplayName") = "Last FM Loved Tracks Playlist Creator"
-		inif.StringValue("LastFmImport","Description") = "Create a playlist containing loved tracks of a specific last.fm user"
-		inif.StringValue("LastFmImport","Language") = "VBScript"
-		inif.StringValue("LastFmImport","ScriptType") = "0"
+		inif.StringValue("LastFmLovedPlaylist","Filename") = "LastFmLovedPlaylist.vbs"
+		inif.StringValue("LastFmLovedPlaylist","Procname") = "LastFmLovedPlaylist"
+		inif.StringValue("LastFmLovedPlaylist","Order") = "7"
+		inif.StringValue("LastFmLovedPlaylist","DisplayName") = "Last FM Loved Tracks Playlist Creator"
+		inif.StringValue("LastFmLovedPlaylist","Description") = "Create a playlist containing loved tracks of a specific last.fm user"
+		inif.StringValue("LastFmLovedPlaylist","Language") = "VBScript"
+		inif.StringValue("LastFmLovedPlaylist","ScriptType") = "0"
 		SDB.RefreshScriptItems
 	End If
 End Sub
